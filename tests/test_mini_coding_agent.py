@@ -397,3 +397,162 @@ def test_ollama_client_posts_expected_payload():
     assert captured["body"]["raw"] is False
     assert captured["body"]["think"] is False
     assert captured["body"]["options"]["num_predict"] == 42
+
+
+
+def test_agent_automatically_selects_skill(tmp_path):
+    skill_dir = tmp_path / "skills" / "validate-robot"
+    skill_dir.mkdir(parents=True)
+
+    (skill_dir / "SKILL.md").write_text(
+        "---\n"
+        "name: validate-robot\n"
+        "description: Validate robot Q-learning code and tests\n"
+        "---\n\n"
+        "Run the robot validation script.\n",
+        encoding="utf-8",
+    )
+
+    agent = build_agent(
+        tmp_path,
+        ["<final>Done.</final>"],
+    )
+
+    agent.ask("Validate my robot Q-learning code and tests")
+
+    assert agent.active_skill is not None
+    assert agent.active_skill.name == "validate-robot"
+    assert "Selected agent skill instructions" in agent.prompt(
+        "Validate my robot Q-learning code and tests"
+    )
+
+
+
+def test_irrelevant_request_does_not_activate_skill(tmp_path):
+    skill_dir = tmp_path / "skills" / "validate-robot"
+    skill_dir.mkdir(parents=True)
+
+    (skill_dir / "SKILL.md").write_text(
+        "---\n"
+        "name: validate-robot\n"
+        "description: Validate robot Q-learning code and tests\n"
+        "---\n",
+        encoding="utf-8",
+    )
+
+    agent = build_agent(tmp_path, ["<final>Done.</final>"])
+    agent.ask("Explain medieval architecture")
+
+    assert agent.active_skill is None
+    assert "Selected agent skill instructions" not in agent.prompt(
+        "Explain medieval architecture"
+    )
+
+
+def test_skill_selection_log_is_persisted(tmp_path):
+    skill_dir = tmp_path / "skills" / "validate-robot"
+    skill_dir.mkdir(parents=True)
+
+    (skill_dir / "SKILL.md").write_text(
+        "---\n"
+        "name: validate-robot\n"
+        "description: Validate robot Q-learning code and tests\n"
+        "---\n\n"
+        "Run the robot validation script.\n",
+        encoding="utf-8",
+    )
+
+    agent = build_agent(
+        tmp_path,
+        ["<final>Done.</final>"],
+    )
+    agent.ask("Validate my robot Q-learning code and tests")
+
+    assert agent.skill_log_path.exists()
+
+    log = json.loads(agent.skill_log_path.read_text(encoding="utf-8"))
+    assert len(log) == 1
+    assert log[0]["selected_skill"] == "validate-robot"
+    assert log[0]["prompt"] == "Validate my robot Q-learning code and tests"
+    assert log[0]["matches"]
+
+
+def test_skill_tool_execution_is_logged(tmp_path):
+    agent = build_agent(
+        tmp_path,
+        [
+            '<tool>{"name":"list_files","args":{}}</tool>',
+            "<final>Done.</final>",
+        ],
+    )
+
+    agent.ask("List the workspace files")
+
+    log = json.loads(agent.skill_log_path.read_text(encoding="utf-8"))
+
+    assert len(log) == 1
+    assert len(log[0]["tool_calls"]) == 1
+    assert log[0]["tool_calls"][0]["tool"] == "list_files"
+    assert "result" in log[0]["tool_calls"][0]
+
+
+def test_skill_log_survives_session_resume(tmp_path):
+    agent = build_agent(
+        tmp_path,
+        ["<final>First request completed.</final>"],
+    )
+    agent.ask("List my project files")
+
+    original_log = json.loads(
+        agent.skill_log_path.read_text(encoding="utf-8")
+    )
+
+    resumed = MiniAgent.from_session(
+        model_client=FakeModelClient(
+            ["<final>Second request completed.</final>"]
+        ),
+        workspace=agent.workspace,
+        session_store=agent.session_store,
+        session_id=agent.session["id"],
+        approval_policy="auto",
+    )
+    resumed.ask("Review my project structure")
+
+    updated_log = json.loads(
+        resumed.skill_log_path.read_text(encoding="utf-8")
+    )
+
+    assert len(original_log) == 1
+    assert len(updated_log) == 2
+    assert updated_log[0] == original_log[0]
+    assert updated_log[1]["prompt"] == "Review my project structure"
+
+
+def test_agent_activates_skill_during_execution(tmp_path):
+    skill_dir = tmp_path / "skills" / "validate-robot"
+    skill_dir.mkdir(parents=True)
+
+    (skill_dir / "SKILL.md").write_text(
+        "---\n"
+        "name: validate-robot\n"
+        "description: Validate robot Q-learning code and tests\n"
+        "---\n\n"
+        "Run the robot validation script.\n",
+        encoding="utf-8",
+    )
+
+    agent = build_agent(
+        tmp_path,
+        [
+            '<tool>{"name":"activate_skill","args":{"name":"validate-robot"}}</tool>',
+            "<final>Skill activated.</final>",
+        ],
+    )
+
+    answer = agent.ask("Inspect my project")
+
+    assert answer == "Skill activated."
+    assert agent.active_skill is not None
+    assert agent.active_skill.name == "validate-robot"
+    assert agent.skill_log[-1]["activation_source"] == "agent_tool"
+    assert "Run the robot validation script" in agent.model_client.prompts[-1]

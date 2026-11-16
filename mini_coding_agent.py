@@ -9,6 +9,7 @@ import urllib.request
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
+from agent_skills import discover_skills, match_skills, load_skill
 
 
 DOC_NAMES = ("AGENTS.md", "README.md", "pyproject.toml", "package.json")
@@ -255,6 +256,18 @@ class MiniAgent:
         }
         self.tools = self.build_tools()
         self.prefix = self.build_prefix()
+        # Component 7: Agent Skills
+        self.skills = discover_skills(self.root / "skills")
+        self.active_skill = None
+        self.skill_log = []
+        self.skill_log_path = self.session_store.root / f"{self.session['id']}_skills.json"
+
+        if self.skill_log_path.exists():
+            self.skill_log = json.loads(
+                self.skill_log_path.read_text(encoding="utf-8")
+            )
+
+
         self.session_path = self.session_store.save(self.session)
 
     @classmethod
@@ -279,6 +292,22 @@ class MiniAgent:
     ###############################################
     #### 3) Structured Tools And Permissions ######
     ###############################################
+
+    def tool_activate_skill(self, args):
+        """Activate a discovered skill during agent execution."""
+        name = args["name"]
+        self.skills = discover_skills(self.root / "skills")
+
+        for skill in self.skills:
+            if skill.name == name:
+                self.active_skill = skill
+                if self.skill_log:
+                    self.skill_log[-1]["selected_skill"] = skill.name
+                    self.skill_log[-1]["activation_source"] = "agent_tool"
+                return f"activated skill: {skill.name}"
+
+        return f"error: unknown skill '{name}'"
+
     def build_tools(self):
         tools = {
             "list_files": {
@@ -299,6 +328,14 @@ class MiniAgent:
                 "description": "Search the workspace with rg or a simple fallback.",
                 "run": self.tool_search,
             },
+
+            "activate_skill": {
+                "schema": {"name": "str"},
+                "risky": False,
+                "description": "Activate a discovered skill by name when its instructions are needed for the current task.",
+                "run": self.tool_activate_skill,
+            },
+
             "run_shell": {
                 "schema": {"command": "str", "timeout": "int=20"},
                 "risky": True,
@@ -419,13 +456,26 @@ class MiniAgent:
     ########################################################
     #### 2) Prompt Shape And Cache Reuse (Continued) #######
     ########################################################
+
     def prompt(self, user_message):
+        skill_context = ""
+
+        if self.active_skill is not None:
+            skill_context = (
+                "Selected agent skill instructions:\n"
+                + load_skill(self.active_skill)
+                + "\nFollow these instructions using the available "
+                "agent tools. Do not bypass tool approvals."
+            )
+
         return "\n\n".join([
             self.prefix,
             self.memory_text(),
+            skill_context,
             "Transcript:\n" + self.history_text(),
             "Current user request:\n" + user_message,
         ])
+
 
     ###############################################
     #### 5) Session Memory (Continued) ###########
@@ -443,6 +493,27 @@ class MiniAgent:
         self.remember(memory["notes"], note, 5)
 
     def ask(self, user_message):
+        # Component 7: Select a skill for this request.
+        self.skills = discover_skills(self.root / "skills")
+        matches = match_skills(user_message, self.skills)
+        self.active_skill = matches[0][0] if matches else None
+
+        self.skill_log.append({
+            "prompt": user_message,
+            "matches": [
+                {"skill": skill.name, "score": score}
+                for skill, score in matches
+            ],
+            "selected_skill": (
+                self.active_skill.name if self.active_skill else None
+            ),
+            "tool_calls": [],
+        })
+        self.skill_log_path.write_text(
+            json.dumps(self.skill_log, indent=2), encoding="utf-8"
+        )
+
+
         memory = self.session["memory"]
         if not memory["task"]:
             memory["task"] = clip(user_message.strip(), 300)
@@ -462,6 +533,18 @@ class MiniAgent:
                 name = payload.get("name", "")
                 args = payload.get("args", {})
                 result = self.run_tool(name, args)
+
+                self.skill_log[-1]["tool_calls"].append({
+                    "tool": name,
+                    "args": args,
+                    "result": result,
+                })
+
+                self.skill_log_path.write_text(
+                    json.dumps(self.skill_log, indent=2), encoding="utf-8"
+                )
+
+
                 self.record(
                     {
                         "role": "tool",
@@ -1017,3 +1100,29 @@ def main(argv=None):
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+def test_agent_automatically_selects_skill(tmp_path):
+    skill_dir = tmp_path / "skills" / "validate-robot"
+    skill_dir.mkdir(parents=True)
+
+    (skill_dir / "SKILL.md").write_text(
+        "---\n"
+        "name: validate-robot\n"
+        "description: Validate robot Q-learning code and tests\n"
+        "---\n\n"
+        "Run the robot validation script.\n",
+        encoding="utf-8",
+    )
+
+    agent = build_agent(
+        tmp_path,
+        ['{"tool": "final", "args": {"answer": "Done"}}'],
+    )
+
+    agent.ask("Validate my robot Q-learning code and tests")
+
+    assert agent.active_skill is not None
+    assert agent.active_skill.name == "validate-robot"
+    assert "Selected agent skill instructions" in agent.prompt(
+        "Validate my robot Q-learning code and tests"
+    )
