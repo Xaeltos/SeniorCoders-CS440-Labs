@@ -1,0 +1,38 @@
+{
+  "dataset": "skillscope_data.db",
+  "seed": 42,
+  "train_rows": 5007,
+  "validation_rows": 716,
+  "test_rows_untouched": 1431,
+  "labels": 217,
+  "tfidf_features": 1000,
+  "baseline_source": "nlbse2027/skill-classification/competition_baseline/main.py",
+  "baseline_method": "SkillScope cleaning + 1000-feature TF-IDF + default 100-tree RandomForest",
+  "changes_from_official_implementation": [
+    "train/validation/test split before fitting TF-IDF",
+    "no MLSMOTE (original synthesizes hundreds of thousands of samples before split)",
+    "no duplicate concatenation",
+    "evaluate on same 716 validation examples as RoBERTa",
+    "retain null text as empty so alignment with RoBERTa is unchanged"
+  ],
+  "NOT_published_or_official_competition_score": true,
+  "skillscope_rf_validation": {
+    "precision": 0.6950141336380585,
+    "recall": 0.47017658068191065,
+    "micro_f1": 0.5609028030578813,
+    "predicted_labels_per_issue": 23.222067039106147
+  },
+  "roberta_checkpoint": "runs\\roberta_recovery\\best_model",
+  "roberta_threshold_previously_selected_on_validation": 0.375,
+  "roberta_validation": {
+    "precision": 0.5782652043868395,
+    "recall": 0.707950199365286,
+    "micro_f1": 0.6365698397600058,
+    "predicted_labels_per_issue": 42.02513966480447
+  },
+  "roberta_minus_skillscope": {
+    "precision": -0.11674892925121905,
+    "recall": 0.23777361868337538,
+    "micro_f1": 0.07566703670212449
+  }
+}

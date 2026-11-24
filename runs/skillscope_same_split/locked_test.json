@@ -1,0 +1,28 @@
+{
+  "comparison": "leakage-controlled SkillScope RF method vs RoBERTa on identical held-out test",
+  "not_official_competition_qualification": true,
+  "threshold_locked_from_validation": 0.54,
+  "model_checkpoint": "runs\\roberta_recovery\\best_model",
+  "train_count": 5007,
+  "validation_count": 716,
+  "heldout_test_count": 1431,
+  "baseline_method": "SkillScope cleaning, 1000-feature TF-IDF, 100-tree RF; no pre-split MLSMOTE or duplicate records",
+  "skillscope_rf_test": {
+    "precision": 0.6772785848172446,
+    "recall": 0.4827262289948857,
+    "micro_f1": 0.5636875525600555,
+    "predicted_labels_per_issue": 23.86023759608665
+  },
+  "roberta_test": {
+    "precision": 0.6935604534729816,
+    "recall": 0.5031625091326584,
+    "micro_f1": 0.5832153788456187,
+    "predicted_labels_per_issue": 24.28651292802236
+  },
+  "roberta_minus_skillscope": {
+    "precision": 0.016281868655736997,
+    "recall": 0.020436280137772656,
+    "micro_f1": 0.019527826285563155
+  },
+  "clean_sweep_on_locked_test": true
+}
