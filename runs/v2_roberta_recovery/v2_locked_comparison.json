@@ -1,0 +1,58 @@
+{
+  "dataset_version": "v2",
+  "database_file": "dataset_v2\\skillscope_data_v2.db",
+  "database_sha256": "5deab43cffbe592c63b4e1c13d4d071683d873e88a13e86e8c4dd325791309a9",
+  "rows": 3070,
+  "labels": 217,
+  "repositories_in_dataset": 11,
+  "seed": 42,
+  "train_rows": 2149,
+  "val_rows": 307,
+  "test_rows": 614,
+  "checkpoint": "runs\\v2_roberta_recovery\\best_model",
+  "selected_epoch": 3,
+  "threshold_selected_only_on_validation": 0.32,
+  "baseline_description": "SkillScope RF + max_features=1000 TF-IDF, cleaning, no MLSMOTE, train-only fit",
+  "reference_is_official_competition_score": false,
+  "validation": {
+    "skillscope_method": {
+      "precision": 0.7269166200335758,
+      "recall": 0.30855106888361045,
+      "micro_f1": 0.4332166083041521,
+      "predicted_labels_per_issue": 5.82084690553746
+    },
+    "roberta": {
+      "precision": 0.4545645771981489,
+      "recall": 0.5133016627078385,
+      "micro_f1": 0.4821508255243195,
+      "predicted_labels_per_issue": 15.485342019543975
+    },
+    "margins": {
+      "precision": -0.2723520428354269,
+      "recall": 0.20475059382422806,
+      "micro_f1": 0.048934217220167386
+    },
+    "clean_sweep_thresholds_found": 0
+  },
+  "locked_test": {
+    "skillscope_method": {
+      "precision": 0.7289871944121071,
+      "recall": 0.3398089863251574,
+      "micro_f1": 0.4635428233029832,
+      "predicted_labels_per_issue": 6.995114006514658
+    },
+    "roberta": {
+      "precision": 0.4566985892287097,
+      "recall": 0.48133275450401564,
+      "micro_f1": 0.4686922060766182,
+      "predicted_labels_per_issue": 15.815960912052118
+    },
+    "margins": {
+      "precision": -0.2722886051833974,
+      "recall": 0.14152376817885826,
+      "micro_f1": 0.005149382773635025
+    },
+    "clean_sweep": false
+  },
+  "caution": "v2 held-out experiment compared to leakage-controlled SkillScope method. Not official competition qualification."
+}

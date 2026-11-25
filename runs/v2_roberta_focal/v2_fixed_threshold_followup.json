@@ -1,0 +1,58 @@
+{
+  "dataset_version": "v2",
+  "database_file": "dataset_v2\\skillscope_data_v2.db",
+  "database_sha256": "5deab43cffbe592c63b4e1c13d4d071683d873e88a13e86e8c4dd325791309a9",
+  "rows": 3070,
+  "labels": 217,
+  "repositories_in_dataset": 11,
+  "seed": 42,
+  "train_rows": 2149,
+  "val_rows": 307,
+  "test_rows": 614,
+  "checkpoint": "runs\\v2_roberta_focal\\best_model",
+  "selected_epoch": 4,
+  "threshold_selected_only_on_validation": 0.545,
+  "baseline_description": "SkillScope RF + max_features=1000 TF-IDF, cleaning, no MLSMOTE, train-only fit",
+  "reference_is_official_competition_score": false,
+  "validation": {
+    "skillscope_method": {
+      "precision": 0.7269166200335758,
+      "recall": 0.30855106888361045,
+      "micro_f1": 0.4332166083041521,
+      "predicted_labels_per_issue": 5.82084690553746
+    },
+    "roberta": {
+      "precision": 0.7592295345104334,
+      "recall": 0.3370546318289786,
+      "micro_f1": 0.46685310083895376,
+      "predicted_labels_per_issue": 6.087947882736156
+    },
+    "margins": {
+      "precision": 0.03231291447685758,
+      "recall": 0.028503562945368155,
+      "micro_f1": 0.033636492534801665
+    },
+    "clean_sweep_thresholds_found_in_prior_validation_audit": 6
+  },
+  "followup_test": {
+    "skillscope_method": {
+      "precision": 0.7289871944121071,
+      "recall": 0.3398089863251574,
+      "micro_f1": 0.4635428233029832,
+      "predicted_labels_per_issue": 6.995114006514658
+    },
+    "roberta": {
+      "precision": 0.7647204354280059,
+      "recall": 0.3354677664423703,
+      "micro_f1": 0.4663548581774291,
+      "predicted_labels_per_issue": 6.583061889250814
+    },
+    "margins": {
+      "precision": 0.03573324101589881,
+      "recall": -0.004341219882787073,
+      "micro_f1": 0.0028120348744459234
+    },
+    "clean_sweep": false
+  },
+  "caution": "FOLLOW-UP evaluation at validation-fixed threshold after v2 test partition was already examined for a different checkpoint; NOT an untouched independent confirmation or an official competition score."
+}

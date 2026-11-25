@@ -1,0 +1,109 @@
+{
+  "model": "FacebookAI/roberta-base",
+  "training_only_label_weights": true,
+  "loss": "tempered positive-weight BCE",
+  "seed": 42,
+  "counts": {
+    "train": 2149,
+    "validation": 307,
+    "held_out_test_unused": 614
+  },
+  "weight_cap": 3.0,
+  "encoder_lr": 2e-05,
+  "head_lr": 0.0001,
+  "max_length": 256,
+  "frequency_only_validation": {
+    "threshold": 0.24999999999999997,
+    "precision": 0.48058130794287146,
+    "recall": 0.45558194774346794,
+    "micro_f1": 0.46774783562980127,
+    "avg_predicted_labels": 13.0
+  },
+  "epochs": [
+    {
+      "epoch": 1,
+      "training_loss_mean": 0.2890791702755662,
+      "validation_threshold": 0.29999999999999993,
+      "validation_tuned": {
+        "precision": 0.446471226927253,
+        "recall": 0.4883610451306413,
+        "micro_f1": 0.4664775950085082,
+        "avg_predicted_labels": 15.0
+      },
+      "validation_fixed_0_5": {
+        "precision": 0.6970684039087948,
+        "recall": 0.25415676959619954,
+        "micro_f1": 0.37249782419495214,
+        "avg_predicted_labels": 5.0
+      }
+    },
+    {
+      "epoch": 2,
+      "training_loss_mean": 0.2214287821498028,
+      "validation_threshold": 0.27499999999999997,
+      "validation_tuned": {
+        "precision": 0.41821907600596125,
+        "recall": 0.5332541567695962,
+        "micro_f1": 0.46878262685320526,
+        "avg_predicted_labels": 17.485342019543975
+      },
+      "validation_fixed_0_5": {
+        "precision": 0.740228013029316,
+        "recall": 0.2159144893111639,
+        "micro_f1": 0.33431408606105184,
+        "avg_predicted_labels": 4.0
+      }
+    },
+    {
+      "epoch": 3,
+      "training_loss_mean": 0.2197093035661897,
+      "validation_threshold": 0.32499999999999996,
+      "validation_tuned": {
+        "precision": 0.4655249110320285,
+        "recall": 0.49714964370546316,
+        "micro_f1": 0.4808178267861245,
+        "avg_predicted_labels": 14.644951140065146
+      },
+      "validation_fixed_0_5": {
+        "precision": 0.6970684039087948,
+        "recall": 0.25415676959619954,
+        "micro_f1": 0.37249782419495214,
+        "avg_predicted_labels": 5.0
+      }
+    },
+    {
+      "epoch": 4,
+      "training_loss_mean": 0.2192657474029896,
+      "validation_threshold": 0.29999999999999993,
+      "validation_tuned": {
+        "precision": 0.46257554625755465,
+        "recall": 0.47268408551068886,
+        "micro_f1": 0.4675751879699248,
+        "avg_predicted_labels": 14.013029315960912
+      },
+      "validation_fixed_0_5": {
+        "precision": 0.6970684039087948,
+        "recall": 0.25415676959619954,
+        "micro_f1": 0.37249782419495214,
+        "avg_predicted_labels": 5.0
+      }
+    }
+  ],
+  "selected_epoch": 3,
+  "selected_validation_threshold": 0.32499999999999996,
+  "selected_validation_metrics": {
+    "precision": 0.4655249110320285,
+    "recall": 0.49714964370546316,
+    "micro_f1": 0.4808178267861245,
+    "avg_predicted_labels": 14.644951140065146
+  },
+  "shuffled_text_metrics_at_selected_threshold": {
+    "precision": 0.43994661921708184,
+    "recall": 0.469833729216152,
+    "micro_f1": 0.454399264874799,
+    "avg_predicted_labels": 14.644951140065146
+  },
+  "validation_f1_text_advantage": 0.026418561911325522,
+  "avg_absolute_probability_change_on_shuffle": 0.005169935058802366,
+  "warning": "Validation scores only; held-out test never inspected. No guarantee of official competition eligibility."
+}
