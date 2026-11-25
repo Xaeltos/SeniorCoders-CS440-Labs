@@ -1,0 +1,32 @@
+{
+  "classification": "follow-up analysis of previously viewed test partition; not independent confirmation",
+  "dataset": "dataset_v2\\skillscope_data_v2.db",
+  "threshold": 0.535,
+  "model_paths": [
+    "runs\\v2_roberta_focal\\best_model",
+    "runs\\v2_focal_seed_2028\\best_model",
+    "runs\\v2_focal_seed_2029\\best_model"
+  ],
+  "test_rows": 614,
+  "labels": 217,
+  "baseline": "leakage-controlled train-only RF reproduction, NOT official baseline",
+  "rf_test": {
+    "precision": 0.7289871944121071,
+    "recall": 0.3398089863251574,
+    "micro_f1": 0.4635428233029832,
+    "predicted_labels_per_issue": 6.995114006514658
+  },
+  "ensemble_test": {
+    "precision": 0.7766897540004777,
+    "recall": 0.35294117647058826,
+    "micro_f1": 0.4853369151555854,
+    "predicted_labels_per_issue": 6.819218241042345
+  },
+  "margins": {
+    "precision": 0.04770255958837055,
+    "recall": 0.013132190145430878,
+    "micro_f1": 0.021794091852602226
+  },
+  "clean_sweep_followup": true,
+  "caution": "Threshold fixed from validation; prior test access limits evidential independence."
+}
