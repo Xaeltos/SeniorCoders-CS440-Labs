@@ -190,3 +190,60 @@ Both methods were evaluated on the **same 1,431 held-out issues**. The SkillScop
 - A prediction from that checkout successfully loaded the model and verified its 217-label order using the existing Python environment.
 - A fresh dependency installation in an independent environment has **not** yet been verified.
 - Keep the original competition files and this repository's `final-nlbse-2027` branch separate from other coursework branches.
+
+
+---
+
+## Senior Coders — Final corrected-v2 competition classifier (November 2026)
+
+**This section supersedes the earlier v1 single-model configuration for the NLBSE 2027 Skill Classification submission.** The original dataset, model, and experimental history remain preserved for reproducibility. The organizers' competition overview above is unchanged.
+
+### Final model and data
+
+- **Branch:** `final-nlbse-2027` (kept separate from coursework branches).
+- **Data:** `dataset_v2/skillscope_data_v2.db` — corrected v2 database, **3,070 labeled issues**, **217 skill labels**, **11 repositories**.
+- **Local deterministic split:** 2,149 training, 307 validation, 614 follow-up test issues (seed 42); this is the team's split, not a verified organizer-provided split.
+- **Input:** issue title and description only; no gold skill labels or completed pull-request code as features.
+- **Architecture:** ensemble of **three independently trained** `FacebookAI/roberta-base` multi-label classifiers, each using focal loss with gamma 2.0. Average their 217 sigmoid probabilities, then predict a positive label for probabilities >= **0.535**. The threshold was selected on the team's validation partition.
+- **Final inference entry point:** `nlbse_predict_ensemble_v2.py`. It produces an ordered **217-element binary vector** for each issue. This inference path has been exercised on the saved checkpoints with the v2 database label-order check.
+
+### Reproduce predictions (Windows PowerShell)
+
+From the repository root, use a Python environment with the dependencies in `requirements.txt`. Install Git LFS and fetch the saved weights:
+
+```powershell
+git lfs pull
+.\.venv\Scripts\python.exe nlbse_predict_ensemble_v2.py --self-test
+.\.venv\Scripts\python.exe nlbse_predict_ensemble_v2.py --title "Fix connection timeout" --description "Implement retry logic" --check-label-order dataset_v2/skillscope_data_v2.db
+```
+
+Batch predictions use a UTF-8 JSONL input with `title` and `description` fields:
+
+```powershell
+.\.venv\Scripts\python.exe nlbse_predict_ensemble_v2.py --input issues.jsonl --output ensemble_predictions.jsonl --check-label-order dataset_v2/skillscope_data_v2.db
+```
+
+The output file must not already exist. Full fresh-environment dependency installation has not been independently validated; checkpoint inference was verified in the project's existing environment.
+
+### Corrected-v2 results: follow-up test, 614 issues
+
+| Micro-averaged metric | Leakage-controlled reproduced SkillScope-method RF | Three-model focal RoBERTa ensemble | Improvement (percentage points) |
+|---|---:|---:|---:|
+| Precision | 72.90% | **77.67%** | **+4.77** |
+| Recall | 33.98% | **35.29%** | **+1.31** |
+| F1 | 46.35% | **48.53%** | **+2.18** |
+
+At threshold **0.535** the ensemble also exceeded the reproduced RF on all three *validation* metrics: precision **75.13%** vs **72.69%**, recall **34.01%** vs **30.86%**, and micro-F1 **46.83%** vs **43.32%**.
+
+**Evaluation limitations:** These are scores against the team's **train-only TF-IDF + Random Forest reproduction**, *not* the organizers' official baseline or published SkillScope scores. The follow-up test partition had already been inspected during earlier model development, so the final comparison must **not** be characterized as untouched independent confirmation. The official competition eligibility outcome is not yet established.
+
+### Artifacts and historical results
+
+- Ensemble inference: `nlbse_predict_ensemble_v2.py`
+- Ensemble training/evaluation: `v2_ensemble_rescue.py`, `v2_ensemble_followup.py`
+- Reproduced RF and ensemble follow-up metrics: `runs/v2_ensemble_rescue/fixed_0535_followup.json`
+- Ensemble validation metrics: `runs/v2_ensemble_rescue/validation_report.json`
+- Model checkpoints (Git LFS): `runs/v2_roberta_focal/best_model/`, `runs/v2_focal_seed_2028/best_model/`, `runs/v2_focal_seed_2029/best_model/`
+- Corrected-v2 single-model results and original v1 results remain in their original files; older README instructions referencing `nlbse_predict.py` and 0.54 describe **v1 only**.
+
+For the current corrected-v2 competition entry, **use the ensemble predictor**, not the historical v1 predictor or the single-model v2 predictor.
